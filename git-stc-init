@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+
+# inits a new git repo
+# creates an empty root commit
+# [optional] adds an origin
+# [optional] fetches & pushes
+
+function init_with_empty_commit()
+{
+	git init
+	git commit --allow-empty -m "initial commit"
+}
+
+function fetch_and_push()
+{
+	read -p "Fetch & Push (y/n)?" choice
+	
+	case "$choice" in 
+	  y|Y ) 
+			git fetch --all
+			git push -u --all
+			;;
+	  n|N ) 
+			echo "skipped fetch & push"
+			;;
+	  * ) 
+			# invalid input, recurse to ask again
+			fetch_and_push
+			;;
+	esac
+}
+
+function add_an_origin()
+{
+	read -p "enter origin url (leave empty to skip):" originUrl
+
+	if [[ -z "${originUrl// }" ]]
+	then
+		echo "skipped adding origin"
+	else
+		git remote add origin $originUrl
+		fetch_and_push
+	fi
+}
+
+init_with_empty_commit
+add_an_origin

@@ -1,0 +1,13 @@
+#!/bin/bash
+
+if [ "$1" == "hard" ]; then
+	echo "Undoing latest commit hard ( git reset --hard HEAD^ )"
+	git reset --hard HEAD^
+elif [ "$1" == "soft" ]; then
+	echo "Undoing latest commit soft ( git reset --soft HEAD^ )"
+	git reset --soft HEAD^
+else
+	echo "Usage: git undo [hard | soft]"
+	echo "hard: Undoes latest commit hard ( git reset --hard HEAD^ )"
+	echo "soft: Undoes latest commit soft ( git reset --soft HEAD^ )"
+fi

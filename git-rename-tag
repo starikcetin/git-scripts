@@ -1,0 +1,13 @@
+#!/bin/bash
+
+if [ -z "$*" ]; then
+	echo "Usage: git rename-tag OLD NEW"
+else
+	old=$1
+	new=$2
+	
+	git tag $new $old
+	git tag -d $old
+	git push origin :refs/tags/$old
+	git push --tags
+fi
