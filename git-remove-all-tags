@@ -1,0 +1,31 @@
+#!/bin/bash
+
+push=false
+fetch=false
+
+while [ ! $# -eq 0 ]
+do
+	case "$1" in
+		--help | -h)
+			echo "git remove-all-tags [-p --push] [-f --fetch] [-h --help]"
+			exit
+			;;
+		--push | -p)
+			$push = true
+			;;
+		--fetch | -f)
+			$fetch = true
+			;;
+	esac
+	shift
+done
+
+if [ "$fetch" = true ] ; then
+	git fetch
+fi
+	
+git tag -d $(git tag -l)
+
+if [ "$push" = true ] ; then
+	git push origin --delete $(git tag -l)
+fi
