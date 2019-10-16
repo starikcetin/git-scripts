@@ -1,31 +1,42 @@
 #!/bin/bash
 
-push=false
-fetch=false
+push=0
+fetch=0
 
 while [ ! $# -eq 0 ]
 do
 	case "$1" in
 		--help | -h)
-			echo "git remove-all-tags [-p --push] [-f --fetch] [-h --help]"
+			echo "git remove-all-tags [-f | --fetch] [-p | --push] [-h | --help]"
 			exit
 			;;
 		--push | -p)
-			$push = true
+			push=1
 			;;
 		--fetch | -f)
-			$fetch = true
+			fetch=1
 			;;
 	esac
 	shift
 done
 
-if [ "$fetch" = true ] ; then
+if [ $fetch -eq 1 ]; then
+	echo "fetching"
 	git fetch
 fi
-	
-git tag -d $(git tag -l)
 
-if [ "$push" = true ] ; then
-	git push origin --delete $(git tag -l)
+tags=$(git tag -l)
+
+if [ ${#tags} -eq 0 ]; then
+	echo "no tags found"
+	exit
 fi
+
+if [ $push -eq 1 ]; then
+	echo "pushing delete"
+	git push --delete origin $tags
+fi
+
+echo "local delete"
+git tag -d $tags
+exit
