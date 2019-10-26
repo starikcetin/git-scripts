@@ -1,0 +1,37 @@
+#!/bin/bash
+
+rec=0
+do=0
+
+while [ ! $# -eq 0 ]
+do
+	case "$1" in
+		--help | -h)
+			echo "git clean-recursive [-r | --recursive] [-d | --doclean] [-h | --help]"
+			echo "-r: if set, command recurses through. if not set, it only runs for immediate children"
+			echo "-d: if set, clean is executed with -f flag (which does indeed delete stuff). if not set, clean is executed with -n flag (which is dry-run, it doesn't delete anything)"
+			exit
+			;;
+		--recursive | -r)
+			rec=1
+			;;
+		--doclean | -d)
+			do=1
+			;;
+	esac
+	shift
+done
+
+if [[ "$do" -eq 0 ]]; then
+	if [[ "$rec" -eq 0 ]]; then
+		find . -maxdepth 2 -type d -name ".git" -exec sh -c "cd \"{}\"/../ && echo --- && pwd && echo && git clean -ndx" \;
+	else
+		find . -type d -name ".git" -exec sh -c "cd \"{}\"/../ && echo --- && pwd && echo && git clean -ndx" \;
+	fi
+else
+	if [[ "$rec" -eq 0 ]]; then
+		find . -maxdepth 2 -type d -name ".git" -exec sh -c "cd \"{}\"/../ && echo --- && pwd && echo && git clean -fdx" \;
+	else
+		find . -type d -name ".git" -exec sh -c "cd \"{}\"/../ && echo --- && pwd && echo && git clean -fdx" \;
+	fi
+fi
