@@ -3,30 +3,24 @@
 # This script stashes the currently staged changes, and leaves everything else in the working directory as-is.
 # (source: https://stackoverflow.com/questions/14759748/stashing-only-staged-changes-in-git-is-it-possible/39644782#39644782)
 
-# Prompt for the desired repo path
-REPOPATH=
-read -p "Enter the repo path, or press ENTER for current dir: " REPOPATH
-
 # Read the desired stash description from the command line, or prompt the user for it if necessary
 STASHNAME=$1
 while [ "$STASHNAME" = "" ] ; do
   read -p "Enter a description for this stash: " STASHNAME
 done
 
-#git -C "$REPOPATH" log -1
-
 # Stash everything temporarily. Keep staged files, discard everything else after stashing.
 #git --git-dir $REPOPATH/.git stash --keep-index
-git -C "$REPOPATH" stash --keep-index
+git stash --keep-index
 
 # Stash everything that remains (only the staged files should remain). This is the stash we want to keep, so give it a name.
-git -C "$REPOPATH" stash save "$STASHNAME"
+git stash save "$STASHNAME"
 
 # Apply the original stash to get us back to where we started
-git -C "$REPOPATH" stash apply stash@{1}
+git stash apply stash@{1}
 
 # Create a temporary patch to reverse the originally staged changes and apply it
-git -C "$REPOPATH" stash show -p | git -C "$REPOPATH" apply -R
+git stash show -p | git apply -R
 
 # Delete the temporary stash
-git -C "$REPOPATH" stash drop stash@{1}
+git stash drop stash@{1}
