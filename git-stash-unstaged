@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+# This script stashes the currently unstaged changes, and leaves everything else in the working directory as-is.
+
+# Read the desired stash description from the command line, or prompt the user for it if necessary
+STASHNAME=$1
+while [ "$STASHNAME" = "" ] ; do
+  read -p "Enter a description for this stash: " STASHNAME
+done
+
+# Stash everything that remains (only the staged files should remain). This is the stash we want to keep, so give it a name.
+git stash save --keep-index --include-untracked "$STASHNAME"
