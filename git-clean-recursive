@@ -1,37 +1,59 @@
 #!/bin/bash
 
-rec=0
-do=0
+RECURSE=0
+DO_CLEAN=0
+SKIP_DIRTY_CHECK=0
 
-while [ ! $# -eq 0 ]
-do
-	case "$1" in
-		--help | -h)
-			echo "git clean-recursive [-r | --recursive] [-d | --doclean] [-h | --help]"
-			echo "-r: if set, command recurses through. if not set, it only runs for immediate children"
-			echo "-d: if set, clean is executed with -f flag (which does indeed delete stuff). if not set, clean is executed with -n flag (which is dry-run, it doesn't delete anything)"
+while [[ $# -ne 0 ]]; do
+	case "${1}" in
+		"--help" | "-h" | "--?" | "-?")
+			echo 'git clean-recursive [-? | -h | --? | --help] [-r | --recurse] [-d | --do-clean] [-s | --skip-dirty-check]'
+			echo 'This command runs git clean recursively for repositories in subdirectories.'
+			echo '--recurse: if set, recurses through. If not set, runs for direct children only.'
+			echo '--do-clean: if set, deletes stuff. If not set, only reports what would get deleted but does not delete anything.'
+			echo '--skip-dirty-check: if set, cleans dirty repos. If not set, skips dirty repos.'
 			exit
 			;;
-		--recursive | -r)
-			rec=1
+		"--recurse" | "-r")
+			RECURSE=1
 			;;
-		--doclean | -d)
-			do=1
+		"--do-clean" | "-d")
+			DO_CLEAN=1
+			;;
+		"--skip-dirty-check" | "-s")
+			SKIP_DIRTY_CHECK=1
 			;;
 	esac
 	shift
 done
 
-if [[ "$do" -eq 0 ]]; then
-	if [[ "$rec" -eq 0 ]]; then
-		find . -maxdepth 2 -type d -name ".git" -exec sh -c "cd \"{}\"/../ && echo --- && pwd && echo && git clean -ndx" \;
-	else
-		find . -type d -name ".git" -exec sh -c "cd \"{}\"/../ && echo --- && pwd && echo && git clean -ndx" \;
-	fi
+CLEAN_ARGS=(-d -x)
+if [[ ${DO_CLEAN} -eq 0 ]]; then
+	CLEAN_ARGS+=(-n)
 else
-	if [[ "$rec" -eq 0 ]]; then
-		find . -maxdepth 2 -type d -name ".git" -exec sh -c "cd \"{}\"/../ && echo --- && pwd && echo && git clean -fdx" \;
-	else
-		find . -type d -name ".git" -exec sh -c "cd \"{}\"/../ && echo --- && pwd && echo && git clean -fdx" \;
-	fi
+	CLEAN_ARGS+=(-f)
 fi
+CLEAN_ARGS_COMPILED="${CLEAN_ARGS[@]}"
+export CLEAN_ARGS_COMPILED
+
+function process_repo() {
+	cd "${1}/.."
+	echo "Cleaning ${PWD}"
+
+	if [[ ${SKIP_DIRTY_CHECK} -eq 0 ]] && [[ `git status --porcelain` ]]; then
+		printf 'Repo is dirty, skipping.\n'
+	else
+		git clean ${CLEAN_ARGS_COMPILED}
+	fi
+	
+	echo
+}
+export -f process_repo
+
+FIND_ARGS=(.)
+if [[ ${RECURSE} -eq 0 ]]; then
+	FIND_ARGS+=(-maxdepth 2)
+fi
+FIND_ARGS+=(-type d -name .git)
+
+find ${FIND_ARGS[@]} -exec /bin/bash -c 'process_repo "${0}"' {} \;
